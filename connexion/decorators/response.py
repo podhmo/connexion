@@ -29,6 +29,8 @@ logger = logging.getLogger('connexion.decorators.response')
 
 
 class ResponseValidator(BaseDecorator):
+    Encoder = None
+n
     def __init__(self, operation,  mimetype):
         """
         :type operation: Operation
@@ -57,7 +59,7 @@ class ResponseValidator(BaseDecorator):
             try:
                 # For cases of custom encoders, we need to encode and decode to
                 # transform to the actual types that are going to be returned.
-                data = json.dumps(data)
+                data = json.dumps(data, cls=self.Encoder)
                 data = json.loads(data)
 
                 v.validate_schema(data)
