@@ -104,6 +104,7 @@ class Operation(SecureOperation):
     """
     A single API operation on a path.
     """
+    Jsonifier = Jsonifier
 
     def __init__(self, method, path, operation, resolver, app_produces, app_consumes,
                  path_parameters=None, app_security=None, security_definitions=None,
@@ -376,7 +377,7 @@ class Operation(SecureOperation):
         mimetype = self.get_mimetype()
         if all_json(self.produces):  # endpoint will return json
             logger.debug('... Produces json', extra=vars(self))
-            jsonify = Jsonifier(mimetype)
+            jsonify = self.Jsonifier(mimetype)
             return jsonify
         elif len(self.produces) == 1:
             logger.debug('... Produces %s', mimetype, extra=vars(self))
