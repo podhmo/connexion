@@ -6,6 +6,8 @@ import sys
 
 import six
 from jsonschema import Draft4Validator, ValidationError, draft4_format_checker
+from jsonschema._validators import type_draft4
+from jsonschema.validators import extend as jsonschema_extend
 from werkzeug import FileStorage
 
 from ..exceptions import ExtraParameterProblem
@@ -19,6 +21,19 @@ TYPE_MAP = {
     'number': float,
     'boolean': boolean
 }
+
+
+def type_draft4_with_nullable(validator, types, instance, schema, nullable_attr="x-nullable"):
+    if schema.get(nullable_attr, False):
+        if not isinstance(types, (list, tuple)):
+            types = [types]
+        types.append("null")
+    yield from type_draft4(validator, types, instance, schema)
+
+
+NullableSupportValidator = jsonschema_extend(Draft4Validator, {
+    "type": type_draft4_with_nullable,
+})
 
 
 def make_type(value, type_literal):
@@ -144,10 +159,10 @@ class ResponseBodyValidator(object):
         """
         :param schema: The schema of the response body
         :param validator: Validator class that should be used to validate passed data
-                          against API schema. Default is jsonschema.Draft4Validator.
+                          against API schema. Default is connexion.decorators.validation.NullableSupportValidator.
         :type validator: jsonschema.IValidator
         """
-        ValidatorClass = validator or Draft4Validator
+        ValidatorClass = validator or NullableSupportValidator
         self.validator = ValidatorClass(schema, format_checker=draft4_format_checker)
 
     def validate_schema(self, data, url):
